@@ -43,8 +43,10 @@ class SlackCommandBot(L.LightningWork):
         self.signing_secret = signing_secret
         self.bot_token = bot_token
 
-    def handle_command(self, client: slack.WebClient):
+
+    def handle_command(self):
         """Cutomize this method the way you want your bot to interact with the prompt."""
+        client = slack.WebClient(token=self.bot_token)
         data: dict = request.form
         import pyjokes
         client.chat_postMessage(pyjokes.get_joke())
