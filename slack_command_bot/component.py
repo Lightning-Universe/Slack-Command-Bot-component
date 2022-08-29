@@ -33,7 +33,7 @@ class SlackCommandBot(L.LightningWork):
             self.slack_bot.run()
     """
 
-    def __init__(self, command="lai", signing_secret=None, bot_token=None, *args, **kwargs):
+    def __init__(self, command="/", signing_secret=None, bot_token=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.command = command
         if not signing_secret:
