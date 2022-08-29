@@ -1,5 +1,7 @@
 # slack_command_bot component
 
+<img src="https://i.ibb.co/KL4ML46/slack-bot.jpg">
+
 With this app you can create a Slack bot and enable interactivity with the Slash Commands.
 It can recieve slash commands and send message or files with the Slack client API.
 
