@@ -33,8 +33,9 @@ class SlackCommandBot(L.LightningWork):
             self.slack_bot.run()
     """
 
-    def __init__(self, signing_secret=None, bot_token=None, *args, **kwargs):
+    def __init__(self, command="lai", signing_secret=None, bot_token=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.command = command
         if not signing_secret:
             signing_secret = os.environ["SIGNING_SECRET"]
         if not bot_token:
@@ -58,6 +59,6 @@ class SlackCommandBot(L.LightningWork):
         BOT_ID = client.api_call("auth.test")["user_id"]
         print(f"Bot initialized with id: {BOT_ID}")
 
-        flask_app.route(partial(self.handle_command, client), methods=["POST", "GET"])
+        flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
         print("starting Slack Command Bot")
         flask_app.run(host=self.host, port=self.port)
