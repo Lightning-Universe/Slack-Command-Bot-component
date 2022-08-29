@@ -2,7 +2,6 @@ import os
 from functools import partial
 
 import lightning as L
-import pyjokes
 import slack
 from dotenv import load_dotenv
 from flask import Flask, request
@@ -46,7 +45,7 @@ class SlackCommandBot(L.LightningWork):
     def handle_command(self, client: slack.WebClient):
         """Cutomize this method the way you want your bot to interact with the prompt."""
         data: dict = request.form
-
+        import pyjokes
         client.chat_postMessage(pyjokes.get_joke())
         return "Hey there! prompt was recieved successfully", 200
 
