@@ -15,14 +15,14 @@ lightning install component https://github.com/Lightning-AI/slack_command_bot
 Once the app is installed, use it in an app:
 
 ```python
-from slack_command_bot import TemplateComponent
+from slack_command_bot import SlackCommandBot
 import lightning as L
 
 
 class LitApp(L.LightningFlow):
     def __init__(self) -> None:
         super().__init__()
-        self.slack_command_bot = TemplateComponent()
+        self.slack_command_bot = SlackCommandBot()
 
     def run(self):
         print("this is a simple Lightning app to verify your component is working as expected")
