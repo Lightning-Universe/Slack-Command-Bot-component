@@ -1,12 +1,9 @@
 import os
+from functools import partial
 
 import lightning as L
-from flask import request
 import pyjokes
-import os
-
 import slack
-from functools import partial
 from dotenv import load_dotenv
 from flask import Flask, request
 from slackeventsapi import SlackEventAdapter
@@ -46,7 +43,7 @@ class SlackCommandBot(L.LightningWork):
         self.signing_secret = signing_secret
         self.bot_token = bot_token
 
-    def handle_command(self, client):
+    def handle_command(self, client: slack.WebClient):
         """Cutomize this method the way you want your bot to interact with the prompt."""
         data: dict = request.form
 

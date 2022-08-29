@@ -1,6 +1,6 @@
-from slack_command_bot import SlackCommandBot
-
 import lightning as L
+
+from slack_command_bot import SlackCommandBot
 
 
 class LitApp(L.LightningFlow):
@@ -9,7 +9,9 @@ class LitApp(L.LightningFlow):
         self.slack_command_bot = SlackCommandBot()
 
     def run(self):
-        print("this is a simple Lightning app to verify your component is working as expected")
+        print(
+            "this is a simple Lightning app to verify your component is working as expected"
+        )
         self.slack_command_bot.run()
 
 
