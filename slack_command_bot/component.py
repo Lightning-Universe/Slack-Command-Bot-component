@@ -90,8 +90,7 @@ def create_oauth_url(flask_app, slack_client_id):
     # Build https://slack.com/oauth/v2/authorize with sufficient query parameters
     authorize_url_generator = AuthorizeUrlGenerator(
         client_id=slack_client_id,
-        scopes=["app_mentions:read", "chat:write"],
-        user_scopes=["search:read"],
+        scopes=["chat:write", "chat:write.public", "commands", "files:write"],
     )
 
     @flask_app.route("/slack/install", methods=["GET"])
