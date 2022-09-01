@@ -34,6 +34,7 @@ class SlackCommandBot(L.LightningWork):
     Step 1: Launch this app and copy the url for the Slack Bot Work (let's say this BOT_URL).
     Step 2: Add Redirect URL on Slack API settings as https://BOT_URL/slack/oauth/callback
     Step 3: To install the app can use the "Add to Slack" button at https://BOT_URL/slack/install
+    Step 4: After the installation, you will have to launch the Lightning App with tokens for the newly created Slack app.
 
 
     class SlackRootFlow(L.LightningFlow):
@@ -55,7 +56,7 @@ class SlackCommandBot(L.LightningWork):
         *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(parallel=True, *args, **kwargs)
         self.command = command
         if not signing_secret:
             signing_secret = os.environ["SIGNING_SECRET"]
