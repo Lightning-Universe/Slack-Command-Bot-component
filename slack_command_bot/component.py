@@ -1,16 +1,17 @@
 import os
-from functools import partial
 
 import lightning as L
 import slack
 from dotenv import load_dotenv
 from flask import Flask, request
+from flask import make_response
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
 from slack_sdk.oauth.state_store import FileOAuthStateStore
 from slackeventsapi import SlackEventAdapter
 
 load_dotenv(".env")
+
 
 # TODO: @aniketmaurya cleanup the oauth code
 
@@ -47,14 +48,14 @@ class SlackCommandBot(L.LightningWork):
     """
 
     def __init__(
-        self,
-        command="/",
-        signing_secret=None,
-        bot_token=None,
-        slack_client_id=None,
-        client_secret=None,
-        *args,
-        **kwargs,
+            self,
+            command="/",
+            signing_secret=None,
+            bot_token=None,
+            slack_client_id=None,
+            client_secret=None,
+            *args,
+            **kwargs,
     ):
         super().__init__(parallel=True, *args, **kwargs)
         self.command = command
@@ -73,7 +74,7 @@ class SlackCommandBot(L.LightningWork):
         data: dict = request.form
         import pyjokes
 
-        client.chat_postMessage(pyjokes.get_joke())
+        client.chat_postMessage(text=pyjokes.get_joke(), channel="channel-id")
         return "Hey there! prompt was recieved successfully", 200
 
     def run(self, *args, **kwargs) -> None:
@@ -117,7 +118,7 @@ class SlackCommandBot(L.LightningWork):
 
 
 def create_oauth_url(
-    flask_app, slack_client_id, state_store, authorize_url_generator, installation_store
+        flask_app, slack_client_id, state_store, authorize_url_generator, installation_store
 ):
     @flask_app.route("/slack/install", methods=["GET"])
     def oauth_start():
@@ -132,7 +133,7 @@ def create_oauth_url(
 
 
 def create_redirect_url(
-    flask_app, slack_client_id, client_secret, state_store, installation_store
+        flask_app, slack_client_id, client_secret, state_store, installation_store
 ):
     # Redirect URL
     @flask_app.route("/slack/oauth/callback", methods=["GET"])
