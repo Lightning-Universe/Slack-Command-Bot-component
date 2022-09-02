@@ -93,7 +93,7 @@ class SlackCommandBot(L.LightningWork):
         # Build https://slack.com/oauth/v2/authorize with sufficient query parameters
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=self.slack_client_id,
-            scopes=["chat:write", "chat:write.public", "commands", "files:write"],
+            scopes=["chat:write", "chat:write.public", "commands", "files:write", "incoming-webhook"],
         )
 
         create_oauth_url(
