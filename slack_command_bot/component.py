@@ -49,7 +49,7 @@ class SlackCommandBot(L.LightningWork):
 
     def __init__(
             self,
-            command="/",
+            command="/lai",
             signing_secret=None,
             bot_token=None,
             slack_client_id=None,
@@ -75,7 +75,7 @@ class SlackCommandBot(L.LightningWork):
         import pyjokes
 
         client.chat_postMessage(text=pyjokes.get_joke(), channel="channel-id")
-        return "Hey there! prompt was recieved successfully", 200
+        return "Hey there! command was received successfully", 200
 
     def run(self, *args, **kwargs) -> None:
         flask_app = Flask(__name__)
@@ -97,14 +97,14 @@ class SlackCommandBot(L.LightningWork):
             scopes=["chat:write", "chat:write.public", "commands", "files:write", "incoming-webhook"],
         )
 
-        create_oauth_url(
+        self._create_oauth_url(
             flask_app=flask_app,
             slack_client_id=self.slack_client_id,
             state_store=state_store,
             authorize_url_generator=authorize_url_generator,
             installation_store=installation_store,
         )
-        create_redirect_url(
+        self._create_redirect_url(
             flask_app=flask_app,
             slack_client_id=self.slack_client_id,
             client_secret=self.client_secret,
@@ -116,92 +116,96 @@ class SlackCommandBot(L.LightningWork):
         print("starting Slack Command Bot")
         flask_app.run(host=self.host, port=self.port)
 
+    def save_new_workspace(self, team_id, bot_token):
+        """Implement this method to save the team id and bot token for distributing slack workspace"""
 
-def create_oauth_url(
-        flask_app, slack_client_id, state_store, authorize_url_generator, installation_store
-):
-    @flask_app.route("/slack/install", methods=["GET"])
-    def oauth_start():
-        # Generate a random value and store it on the server-side
-        state = state_store.issue()
-        # https://slack.com/oauth/v2/authorize?state=(generated value)&client_id={client_id}&scope=app_mentions:read,chat:write&user_scope=search:read
-        url = authorize_url_generator.generate(state)
-        return (
-            f'<a href="{url}">'
-            f'<img alt=""Add to Slack"" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>'
-        )
+    def _create_oauth_url(self,
+                          flask_app, slack_client_id, state_store, authorize_url_generator, installation_store
+                          ):
+        @flask_app.route("/slack/install", methods=["GET"])
+        def oauth_start():
+            # Generate a random value and store it on the server-side
+            state = state_store.issue()
+            # https://slack.com/oauth/v2/authorize?state=(generated value)&client_id={client_id}&scope=app_mentions:read,chat:write&user_scope=search:read
+            url = authorize_url_generator.generate(state)
+            return (
+                f'<a href="{url}">'
+                f'<img alt=""Add to Slack"" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>'
+            )
 
 
-def create_redirect_url(
-        flask_app, slack_client_id, client_secret, state_store, installation_store
-):
-    # Redirect URL
-    @flask_app.route("/slack/oauth/callback", methods=["GET"])
-    def oauth_callback():
-        # Retrieve the auth code and state from the request params
-        if "code" in request.args:
-            # Verify the state parameter
-            if state_store.consume(request.args["state"]):
-                client = slack.WebClient()  # no prepared token needed for this
-                # Complete the installation by calling oauth.v2.access API method
-                oauth_response = client.oauth_v2_access(
-                    client_id=slack_client_id,
-                    client_secret=client_secret,
-                    # redirect_uri=redirect_uri,
-                    code=request.args["code"],
-                )
+    def _create_redirect_url(self,
+                             flask_app, slack_client_id, client_secret, state_store, installation_store
+                             ):
+        # Redirect URL
+        @flask_app.route("/slack/oauth/callback", methods=["GET"])
+        def oauth_callback():
+            # Retrieve the auth code and state from the request params
+            if "code" in request.args:
+                # Verify the state parameter
+                if state_store.consume(request.args["state"]):
+                    client = slack.WebClient()  # no prepared token needed for this
+                    # Complete the installation by calling oauth.v2.access API method
+                    oauth_response = client.oauth_v2_access(
+                        client_id=slack_client_id,
+                        client_secret=client_secret,
+                        # redirect_uri=redirect_uri,
+                        code=request.args["code"],
+                    )
 
-                installed_enterprise = oauth_response.get("enterprise", {}) or {}
-                is_enterprise_install = oauth_response.get("is_enterprise_install")
-                installed_team = oauth_response.get("team", {})
-                installer = oauth_response.get("authed_user", {})
-                incoming_webhook = oauth_response.get("incoming_webhook", {})
+                    installed_enterprise = oauth_response.get("enterprise", {}) or {}
+                    is_enterprise_install = oauth_response.get("is_enterprise_install")
+                    installed_team = oauth_response.get("team", {})
+                    installer = oauth_response.get("authed_user", {})
+                    incoming_webhook = oauth_response.get("incoming_webhook", {})
 
-                bot_token = oauth_response.get("access_token")
-                # NOTE: oauth.v2.access doesn't include bot_id in response
-                bot_id = None
-                enterprise_url = None
-                if bot_token is not None:
-                    auth_test = client.auth_test(token=bot_token)
-                    bot_id = auth_test["bot_id"]
-                    if is_enterprise_install is True:
-                        enterprise_url = auth_test.get("url")
+                    bot_token = oauth_response.get("access_token")
+                    # NOTE: oauth.v2.access doesn't include bot_id in response
+                    bot_id = None
+                    enterprise_url = None
+                    if bot_token is not None:
+                        auth_test = client.auth_test(token=bot_token)
+                        bot_id = auth_test["bot_id"]
+                        if is_enterprise_install is True:
+                            enterprise_url = auth_test.get("url")
 
-                installation = Installation(
-                    app_id=oauth_response.get("app_id"),
-                    enterprise_id=installed_enterprise.get("id"),
-                    enterprise_name=installed_enterprise.get("name"),
-                    enterprise_url=enterprise_url,
-                    team_id=installed_team.get("id"),
-                    team_name=installed_team.get("name"),
-                    bot_token=bot_token,
-                    bot_id=bot_id,
-                    bot_user_id=oauth_response.get("bot_user_id"),
-                    bot_scopes=oauth_response.get("scope"),  # comma-separated string
-                    user_id=installer.get("id"),
-                    user_token=installer.get("access_token"),
-                    user_scopes=installer.get("scope"),  # comma-separated string
-                    incoming_webhook_url=incoming_webhook.get("url"),
-                    incoming_webhook_channel=incoming_webhook.get("channel"),
-                    incoming_webhook_channel_id=incoming_webhook.get("channel_id"),
-                    incoming_webhook_configuration_url=incoming_webhook.get(
-                        "configuration_url"
-                    ),
-                    is_enterprise_install=is_enterprise_install,
-                    token_type=oauth_response.get("token_type"),
-                )
+                    installation = Installation(
+                        app_id=oauth_response.get("app_id"),
+                        enterprise_id=installed_enterprise.get("id"),
+                        enterprise_name=installed_enterprise.get("name"),
+                        enterprise_url=enterprise_url,
+                        team_id=installed_team.get("id"),
+                        team_name=installed_team.get("name"),
+                        bot_token=bot_token,
+                        bot_id=bot_id,
+                        bot_user_id=oauth_response.get("bot_user_id"),
+                        bot_scopes=oauth_response.get("scope"),  # comma-separated string
+                        user_id=installer.get("id"),
+                        user_token=installer.get("access_token"),
+                        user_scopes=installer.get("scope"),  # comma-separated string
+                        incoming_webhook_url=incoming_webhook.get("url"),
+                        incoming_webhook_channel=incoming_webhook.get("channel"),
+                        incoming_webhook_channel_id=incoming_webhook.get("channel_id"),
+                        incoming_webhook_configuration_url=incoming_webhook.get(
+                            "configuration_url"
+                        ),
+                        is_enterprise_install=is_enterprise_install,
+                        token_type=oauth_response.get("token_type"),
+                    )
 
-                # Store the installation
-                installation_store.save(installation)
+                    self.save_new_workspace(team_id=installed_team.get("id"), bot_token=bot_token)
 
-                return "Thanks for installing this app!"
-            else:
-                return make_response(
-                    f"Try the installation again (the state value is already expired)",
-                    400,
-                )
+                    # Store the installation
+                    installation_store.save(installation)
 
-        error = request.args["error"] if "error" in request.args else ""
-        return make_response(
-            f"Something is wrong with the installation (error: {error})", 400
-        )
+                    return "Thanks for installing this app!"
+                else:
+                    return make_response(
+                        f"Try the installation again (the state value is already expired)",
+                        400,
+                    )
+
+            error = request.args["error"] if "error" in request.args else ""
+            return make_response(
+                f"Something is wrong with the installation (error: {error})", 400
+            )
