@@ -16,9 +16,8 @@ load_dotenv(".env")
 
 
 class SlackCommandBot(L.LightningWork):
-    """
-    With this app you can create a Slack bot and enable interactivity with the Slash Commands.
-    It can recieve slash commands and send message or files with the Slack client API.
+    """With this app you can create a Slack bot and enable interactivity with the Slash Commands. It can recieve slash
+    commands and send message or files with the Slack client API.
 
     To run this components:
 
@@ -122,7 +121,7 @@ class SlackCommandBot(L.LightningWork):
         flask_app.run(host=self.host, port=self.port)
 
     def save_new_workspace(self, team_id, bot_token):
-        """Implement this method to save the team id and bot token for distributing slack workspace"""
+        """Implement this method to save the team id and bot token for distributing slack workspace."""
 
     def _create_oauth_url(
         self,

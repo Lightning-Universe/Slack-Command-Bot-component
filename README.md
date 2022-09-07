@@ -5,7 +5,6 @@
 With this app you can create a Slack bot and enable interactivity with the Slash Commands.
 It can recieve slash commands and send message or files with the Slack client API.
 
-
 ## To run slack_command_bot
 
 First, install slack_command_bot (warning: this component has not been officially approved on the lightning gallery):
@@ -27,7 +26,9 @@ class LitApp(L.LightningFlow):
         self.slack_command_bot = SlackCommandBot()
 
     def run(self):
-        print("this is a simple Lightning app to verify your component is working as expected")
+        print(
+            "this is a simple Lightning app to verify your component is working as expected"
+        )
         self.slack_command_bot.run()
 
 

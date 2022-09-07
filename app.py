@@ -11,7 +11,7 @@ from slack_command_bot import SlackCommandBot
 
 class DemoSlackCommandBot(SlackCommandBot):
     def __init__(self, *args, **kwargs):
-        super(DemoSlackCommandBot, self).__init__(port=3000, *args, **kwargs)
+        super().__init__(port=3000, *args, **kwargs)
         self.API_URL = os.environ("SHEET_API_URL")
 
     def save_new_workspace(self, team_id, bot_token):
