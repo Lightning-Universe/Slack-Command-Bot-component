@@ -3,8 +3,7 @@ import os
 import lightning as L
 import slack
 from dotenv import load_dotenv
-from flask import Flask, request, redirect
-from flask import make_response
+from flask import Flask, make_response, redirect, request
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
 from slack_sdk.oauth.state_store import FileOAuthStateStore
@@ -48,14 +47,14 @@ class SlackCommandBot(L.LightningWork):
     """
 
     def __init__(
-            self,
-            command="/lai",
-            signing_secret=None,
-            bot_token=None,
-            slack_client_id=None,
-            client_secret=None,
-            *args,
-            **kwargs,
+        self,
+        command="/lai",
+        signing_secret=None,
+        bot_token=None,
+        slack_client_id=None,
+        client_secret=None,
+        *args,
+        **kwargs,
     ):
         super().__init__(parallel=True, *args, **kwargs)
         self.command = command
@@ -94,7 +93,13 @@ class SlackCommandBot(L.LightningWork):
         # Build https://slack.com/oauth/v2/authorize with sufficient query parameters
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=self.slack_client_id,
-            scopes=["chat:write", "chat:write.public", "commands", "files:write", "incoming-webhook"],
+            scopes=[
+                "chat:write",
+                "chat:write.public",
+                "commands",
+                "files:write",
+                "incoming-webhook",
+            ],
         )
 
         self._create_oauth_url(
@@ -119,9 +124,14 @@ class SlackCommandBot(L.LightningWork):
     def save_new_workspace(self, team_id, bot_token):
         """Implement this method to save the team id and bot token for distributing slack workspace"""
 
-    def _create_oauth_url(self,
-                          flask_app, slack_client_id, state_store, authorize_url_generator, installation_store
-                          ):
+    def _create_oauth_url(
+        self,
+        flask_app,
+        slack_client_id,
+        state_store,
+        authorize_url_generator,
+        installation_store,
+    ):
         @flask_app.route("/slack/install", methods=["GET"])
         def oauth_install():
             # Generate a random value and store it on the server-side
@@ -141,10 +151,9 @@ class SlackCommandBot(L.LightningWork):
             url = authorize_url_generator.generate(state)
             return redirect(url)
 
-
-    def _create_redirect_url(self,
-                             flask_app, slack_client_id, client_secret, state_store, installation_store
-                             ):
+    def _create_redirect_url(
+        self, flask_app, slack_client_id, client_secret, state_store, installation_store
+    ):
         # Redirect URL
         @flask_app.route("/slack/oauth/callback", methods=["GET"])
         def oauth_callback():
@@ -187,7 +196,9 @@ class SlackCommandBot(L.LightningWork):
                         bot_token=bot_token,
                         bot_id=bot_id,
                         bot_user_id=oauth_response.get("bot_user_id"),
-                        bot_scopes=oauth_response.get("scope"),  # comma-separated string
+                        bot_scopes=oauth_response.get(
+                            "scope"
+                        ),  # comma-separated string
                         user_id=installer.get("id"),
                         user_token=installer.get("access_token"),
                         user_scopes=installer.get("scope"),  # comma-separated string
@@ -201,7 +212,9 @@ class SlackCommandBot(L.LightningWork):
                         token_type=oauth_response.get("token_type"),
                     )
 
-                    self.save_new_workspace(team_id=installed_team.get("id"), bot_token=bot_token)
+                    self.save_new_workspace(
+                        team_id=installed_team.get("id"), bot_token=bot_token
+                    )
 
                     # Store the installation
                     installation_store.save(installation)
