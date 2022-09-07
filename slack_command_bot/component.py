@@ -3,7 +3,7 @@ import os
 import lightning as L
 import slack
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask, request, redirect
 from flask import make_response
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
@@ -123,7 +123,7 @@ class SlackCommandBot(L.LightningWork):
                           flask_app, slack_client_id, state_store, authorize_url_generator, installation_store
                           ):
         @flask_app.route("/slack/install", methods=["GET"])
-        def oauth_start():
+        def oauth_install():
             # Generate a random value and store it on the server-side
             state = state_store.issue()
             # https://slack.com/oauth/v2/authorize?state=(generated value)&client_id={client_id}&scope=app_mentions:read,chat:write&user_scope=search:read
@@ -132,6 +132,13 @@ class SlackCommandBot(L.LightningWork):
                 f'<a href="{url}">'
                 f'<img alt=""Add to Slack"" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>'
             )
+
+        @flask_app.route("/slack/start", methods=["GET"])
+        def oauth_start():
+            # store random state to verify auth completion.
+            state = state_store.issue()
+            url = authorize_url_generator.generate(state)
+            return redirect(url)
 
 
     def _create_redirect_url(self,
