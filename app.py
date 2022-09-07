@@ -10,9 +10,8 @@ from slack_command_bot import SlackCommandBot
 
 
 class DemoSlackCommandBot(SlackCommandBot):
-
     def __init__(self, *args, **kwargs):
-        super(DemoSlackCommandBot, self).__init__(port=3000, *args, **kwargs)
+        super().__init__(port=3000, *args, **kwargs)
         self.API_URL = os.environ("SHEET_API_URL")
 
     def save_new_workspace(self, team_id, bot_token):
@@ -27,7 +26,9 @@ class DemoSlackCommandBot(SlackCommandBot):
 
         data: dict = request.form
         team_id = data["team_id"]
-        response = requests.get(f"{self.API_URL}?search=" + json.dumps({"team_id": team_id}))
+        response = requests.get(
+            f"{self.API_URL}?search=" + json.dumps({"team_id": team_id})
+        )
         bot_token = response.json()[0]["bot_token"]
 
         client = slack.WebClient(token=bot_token)
@@ -47,5 +48,5 @@ class LitApp(L.LightningFlow):
         self.slack_command_bot.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = L.LightningApp(LitApp(), debug=True)
