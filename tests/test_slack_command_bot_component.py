@@ -14,7 +14,7 @@ class TestSlackCommandBot(SlackCommandBot):
         super().__init__(*args, **kwargs)
 
     def handle_command(self):
-        """Cutomize this method the way you want your bot to interact with the command."""
+        """Customize this method the way you want your bot to interact with the command."""
 
         data: dict = request.form
         channel_id = data["channel_id"]
