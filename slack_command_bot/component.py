@@ -66,7 +66,7 @@ class SlackCommandBot(L.LightningWork):
         self.client_secret = client_secret or os.environ["CLIENT_SECRET"]
         self.signing_secret = signing_secret
         self.bot_token = bot_token
-        self._flask_app = Flask(__name__)
+        self._flask_app = None
 
     @abc.abstractmethod
     def handle_command(self):
@@ -79,6 +79,7 @@ class SlackCommandBot(L.LightningWork):
         """Implement this method to save the team id and bot token for distributing slack workspace."""
 
     def init_flask_app(self):
+        self._flask_app = Flask(__name__)
         client = slack.WebClient(token=self.bot_token)
         slack_events_adapter = SlackEventAdapter(
             self.signing_secret, "/slack/events", self._flask_app
