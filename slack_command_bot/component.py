@@ -118,7 +118,6 @@ class SlackCommandBot(L.LightningWork):
             installation_store=installation_store,
         )
 
-
     def run(self, *args, **kwargs) -> None:
         self.init_flask_app()
         self.flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
