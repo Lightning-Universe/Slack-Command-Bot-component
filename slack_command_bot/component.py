@@ -74,6 +74,9 @@ class SlackCommandBot(L.LightningWork):
         See the example in app.py
         """
 
+    def save_new_workspace(self, team_id, bot_token):
+        """Implement this method to save the team id and bot token for distributing slack workspace."""
+
     def run(self, *args, **kwargs) -> None:
         flask_app = Flask(__name__)
         client = slack.WebClient(token=self.bot_token)
@@ -118,9 +121,6 @@ class SlackCommandBot(L.LightningWork):
         flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
         print("starting Slack Command Bot")
         flask_app.run(host=self.host, port=self.port)
-
-    def save_new_workspace(self, team_id, bot_token):
-        """Implement this method to save the team id and bot token for distributing slack workspace."""
 
     def _create_oauth_url(
         self,
