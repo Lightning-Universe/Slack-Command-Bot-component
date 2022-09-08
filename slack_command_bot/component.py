@@ -1,3 +1,4 @@
+import abc
 import os
 
 import lightning as L
@@ -28,7 +29,7 @@ class SlackCommandBot(L.LightningWork):
     Step 3: Cutomize the handle_command method the way you want your bot to interact with the prompt.
 
 
-    How to make this app publicaly distributable:
+    How to make this app publicly distributable:
 
     Step 1: Launch this app and copy the url for the Slack Bot Work (let's say this BOT_URL).
     Step 2: Add Redirect URL on Slack API settings as https://BOT_URL/slack/oauth/callback
@@ -66,14 +67,15 @@ class SlackCommandBot(L.LightningWork):
         self.signing_secret = signing_secret
         self.bot_token = bot_token
 
+    @abc.abstractmethod
     def handle_command(self):
-        """Cutomize this method the way you want your bot to interact with the prompt."""
-        client = slack.WebClient(token=self.bot_token)
-        data: dict = request.form
-        import pyjokes
+        """Customize this method the way you want your bot to interact with the prompt.
 
-        client.chat_postMessage(text=pyjokes.get_joke(), channel="channel-id")
-        return "Hey there! command was received successfully", 200
+        See the example in app.py
+        """
+
+    def save_new_workspace(self, team_id, bot_token):
+        """Implement this method to save the team id and bot token for distributing slack workspace."""
 
     def run(self, *args, **kwargs) -> None:
         flask_app = Flask(__name__)
@@ -119,9 +121,6 @@ class SlackCommandBot(L.LightningWork):
         flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
         print("starting Slack Command Bot")
         flask_app.run(host=self.host, port=self.port)
-
-    def save_new_workspace(self, team_id, bot_token):
-        """Implement this method to save the team id and bot token for distributing slack workspace."""
 
     def _create_oauth_url(
         self,

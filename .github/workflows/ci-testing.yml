@@ -48,21 +48,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-py${{ matrix.python-version }}-
 
-      - name: Clone Template React UI Repo
-        uses: actions/checkout@v3
-        with:
-          repository: Lightning-AI/lightning
-          token: ${{ secrets.PAT_GHOST }}
-          ref: "master"
-          path: lightning
-
-      - name: Install Lightning
-        run: |
-          cd lightning
-          pip install -r requirements.txt
-          pip install -e .
-        shell: bash
-
       - name: Install dependencies
         run: |
           python --version
@@ -73,6 +58,12 @@ jobs:
         shell: bash
 
       - name: Tests
+        env:
+          BOT_TOKEN: ${{secrets.BOT_TOKEN}}
+          SLACK_TOKEN: ${{secrets.SLACK_TOKEN}}
+          SIGNING_SECRET: ${{secrets.SIGNING_SECRET}}
+          SLACK_CLIENT_ID: ${{secrets.SLACK_CLIENT_ID}}
+          CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
         run: |
           coverage run --source slack_command_bot -m py.test slack_command_bot tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
 
