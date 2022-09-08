@@ -66,7 +66,6 @@ class SlackCommandBot(L.LightningWork):
         self.client_secret = client_secret or os.environ["CLIENT_SECRET"]
         self.signing_secret = signing_secret
         self.bot_token = bot_token
-        self._flask_app = None
 
     @abc.abstractmethod
     def handle_command(self):
@@ -78,11 +77,13 @@ class SlackCommandBot(L.LightningWork):
     def save_new_workspace(self, team_id, bot_token):
         """Implement this method to save the team id and bot token for distributing slack workspace."""
 
-    def init_flask_app(self):
-        self._flask_app = Flask(__name__)
+    def init_flask_app(self, app:Flask = None):
+        if not app:
+            app = Flask(__name__)
+
         client = slack.WebClient(token=self.bot_token)
         slack_events_adapter = SlackEventAdapter(
-            self.signing_secret, "/slack/events", self._flask_app
+            self.signing_secret, "/slack/events", app
         )
         BOT_ID = client.api_call("auth.test")["user_id"]
         print(f"Bot initialized with id: {BOT_ID}")
@@ -105,27 +106,28 @@ class SlackCommandBot(L.LightningWork):
         )
 
         self._create_oauth_url(
-            flask_app=self._flask_app,
+            flask_app=app,
             slack_client_id=self.slack_client_id,
             state_store=state_store,
             authorize_url_generator=authorize_url_generator,
             installation_store=installation_store,
         )
         self._create_redirect_url(
-            flask_app=self._flask_app,
+            flask_app=app,
             slack_client_id=self.slack_client_id,
             client_secret=self.client_secret,
             state_store=state_store,
             installation_store=installation_store,
         )
-
-    def run(self, *args, **kwargs) -> None:
-        self.init_flask_app()
-        self._flask_app.route(self.command, methods=["POST", "GET"])(
+        app.route(self.command, methods=["POST", "GET"])(
             self.handle_command
         )
+
+    def run(self, *args, **kwargs) -> None:
+        app = Flask(__name__)
+        self.init_flask_app(app=app)
         print("starting Slack Command Bot")
-        self._flask_app.run(host=self.host, port=self.port)
+        app.run(host=self.host, port=self.port)
 
     def _create_oauth_url(
         self,
