@@ -66,7 +66,7 @@ class SlackCommandBot(L.LightningWork):
         self.client_secret = client_secret or os.environ["CLIENT_SECRET"]
         self.signing_secret = signing_secret
         self.bot_token = bot_token
-        self._flask_app: Flask = None
+        self._flask_app = None
 
     @abc.abstractmethod
     def handle_command(self):
