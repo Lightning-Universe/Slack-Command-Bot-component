@@ -8,7 +8,7 @@ setup(
     description="⚡ With this app you can create a Slack bot and enable interactivity with the Slash Commands.",
     author="Aniket Maurya",
     author_email="aniket@lightning.ai",
-    url="https://github.com/Lightning-AI/LAI-slack-slash-sommand-bot-Component",
+    url="https://github.com/Lightning-AI/LAI-slack-slash-command-bot-Component",
     install_requires=[],
     packages=find_packages(),
 )
