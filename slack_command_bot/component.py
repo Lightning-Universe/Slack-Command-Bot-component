@@ -121,7 +121,9 @@ class SlackCommandBot(L.LightningWork):
 
     def run(self, *args, **kwargs) -> None:
         self.init_flask_app()
-        self._flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
+        self._flask_app.route(self.command, methods=["POST", "GET"])(
+            self.handle_command
+        )
         print("starting Slack Command Bot")
         self._flask_app.run(host=self.host, port=self.port)
 
