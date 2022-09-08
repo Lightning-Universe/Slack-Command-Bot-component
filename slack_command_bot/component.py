@@ -66,6 +66,7 @@ class SlackCommandBot(L.LightningWork):
         self.client_secret = client_secret or os.environ["CLIENT_SECRET"]
         self.signing_secret = signing_secret
         self.bot_token = bot_token
+        self._flask_app: Flask = None
 
     @abc.abstractmethod
     def handle_command(self):
@@ -78,10 +79,10 @@ class SlackCommandBot(L.LightningWork):
         """Implement this method to save the team id and bot token for distributing slack workspace."""
 
     def init_flask_app(self):
-        self.flask_app = Flask(__name__)
+        self._flask_app = Flask(__name__)
         client = slack.WebClient(token=self.bot_token)
         slack_events_adapter = SlackEventAdapter(
-            self.signing_secret, "/slack/events", self.flask_app
+            self.signing_secret, "/slack/events", self._flask_app
         )
         BOT_ID = client.api_call("auth.test")["user_id"]
         print(f"Bot initialized with id: {BOT_ID}")
@@ -104,14 +105,14 @@ class SlackCommandBot(L.LightningWork):
         )
 
         self._create_oauth_url(
-            flask_app=self.flask_app,
+            flask_app=self._flask_app,
             slack_client_id=self.slack_client_id,
             state_store=state_store,
             authorize_url_generator=authorize_url_generator,
             installation_store=installation_store,
         )
         self._create_redirect_url(
-            flask_app=self.flask_app,
+            flask_app=self._flask_app,
             slack_client_id=self.slack_client_id,
             client_secret=self.client_secret,
             state_store=state_store,
@@ -120,9 +121,9 @@ class SlackCommandBot(L.LightningWork):
 
     def run(self, *args, **kwargs) -> None:
         self.init_flask_app()
-        self.flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
+        self._flask_app.route(self.command, methods=["POST", "GET"])(self.handle_command)
         print("starting Slack Command Bot")
-        self.flask_app.run(host=self.host, port=self.port)
+        self._flask_app.run(host=self.host, port=self.port)
 
     def _create_oauth_url(
         self,
