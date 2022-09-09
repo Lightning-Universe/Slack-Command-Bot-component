@@ -1,3 +1,5 @@
+import os
+
 import lightning as L
 import slack
 from flask import request
@@ -24,9 +26,10 @@ class LitApp(L.LightningFlow):
         self.slack_command_bot = DemoSlackCommandBot()
 
     def run(self):
-        # print(
-        #     "this is a simple Lightning app to verify your component is working as expected"
-        # )
+        if os.environ.get("TESTING_LAI"):
+            print(
+                "this is a simple Lightning app to verify your component is working as expected"
+            )
         self.slack_command_bot.run()
 
 
