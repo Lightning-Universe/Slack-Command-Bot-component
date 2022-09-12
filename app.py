@@ -15,7 +15,7 @@ class DemoSlackCommandBot(SlackCommandBot):
         """Customize this method the way you want your bot to interact with the command."""
 
         data: dict = request.form
-        client = slack.WebClient(token=self._bot_token)
+        client = slack.WebClient(token=self.bot_token)
         client.chat_postMessage(channel=data.get("channel_id"), text="Testing send msg")
         return "Hey there! command was received successfully", 200
 
