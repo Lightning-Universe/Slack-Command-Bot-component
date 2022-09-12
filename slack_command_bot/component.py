@@ -74,6 +74,10 @@ class SlackCommandBot(L.LightningWork):
     def save_new_workspace(self, team_id, bot_token):
         """Implement this method to save the team id and bot token for distributing slack workspace."""
 
+    @property
+    def bot_token(self):
+        return self._bot_token
+
     def init_flask_app(self, app: Flask = None):
         if not app:
             app = Flask(__name__)
