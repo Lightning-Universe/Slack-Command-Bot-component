@@ -58,14 +58,11 @@ class SlackCommandBot(L.LightningWork):
     ):
         super().__init__(parallel=True, *args, **kwargs)
         self.command = command
-        if not signing_secret:
-            signing_secret = os.environ["SIGNING_SECRET"]
-        if not bot_token:
-            bot_token = os.environ["BOT_TOKEN"]
-        self.slack_client_id = slack_client_id or os.environ["SLACK_CLIENT_ID"]
-        self.client_secret = client_secret or os.environ["CLIENT_SECRET"]
-        self.signing_secret = signing_secret
-        self.bot_token = bot_token
+
+        self._slack_client_id = slack_client_id or os.environ.get("SLACK_CLIENT_ID")
+        self._client_secret = client_secret or os.environ.get("CLIENT_SECRET")
+        self._signing_secret = signing_secret or os.environ.get("SIGNING_SECRET")
+        self._bot_token = bot_token or os.environ.get("BOT_TOKEN")
 
     @abc.abstractmethod
     def handle_command(self):
@@ -81,9 +78,9 @@ class SlackCommandBot(L.LightningWork):
         if not app:
             app = Flask(__name__)
 
-        client = slack.WebClient(token=self.bot_token)
+        client = slack.WebClient(token=self._bot_token)
         slack_events_adapter = SlackEventAdapter(
-            self.signing_secret, "/slack/events", app
+            self._signing_secret, "/slack/events", app
         )
         BOT_ID = client.api_call("auth.test")["user_id"]
         print(f"Bot initialized with id: {BOT_ID}")
@@ -95,7 +92,7 @@ class SlackCommandBot(L.LightningWork):
 
         # Build https://slack.com/oauth/v2/authorize with sufficient query parameters
         authorize_url_generator = AuthorizeUrlGenerator(
-            client_id=self.slack_client_id,
+            client_id=self._slack_client_id,
             scopes=[
                 "chat:write",
                 "chat:write.public",
@@ -107,15 +104,15 @@ class SlackCommandBot(L.LightningWork):
 
         self._create_oauth_url(
             flask_app=app,
-            slack_client_id=self.slack_client_id,
+            slack_client_id=self._slack_client_id,
             state_store=state_store,
             authorize_url_generator=authorize_url_generator,
             installation_store=installation_store,
         )
         self._create_redirect_url(
             flask_app=app,
-            slack_client_id=self.slack_client_id,
-            client_secret=self.client_secret,
+            slack_client_id=self._slack_client_id,
+            client_secret=self._client_secret,
             state_store=state_store,
             installation_store=installation_store,
         )
