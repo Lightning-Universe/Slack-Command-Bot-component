@@ -10,7 +10,7 @@ It can recieve slash commands and send message or files with the Slack client AP
 First, install slack_command_bot (warning: this component has not been officially approved on the lightning gallery):
 
 ```bash
-lightning install component https://github.com/Lightning-AI/slack_command_bot
+lightning install component git+https://github.com/Lightning-AI/LAI-slack-messenger.git@main
 ```
 
 Once the app is installed, use it in an app:
