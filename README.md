@@ -5,7 +5,7 @@
 With this app you can create a Slack bot and enable interactivity with the Slash Commands.
 It can recieve slash commands and send message or files with the Slack client API.
 
-## To run slack_command_bot
+## How to Run Slack Command Bot
 
 First, install slack_command_bot (warning: this component has not been officially approved on the lightning gallery):
 
@@ -24,7 +24,7 @@ from flask import request
 
 class DemoSlackCommandBot(SlackCommandBot):
     def handle_command(self):
-        """Cutomize this method the way you want your bot to interact with the prompt."""
+        """Customize this method the way you want your bot to interact with the prompt."""
         client = slack.WebClient(token=self.bot_token)
         data: dict = request.form
         channel_id = data["channel_id"]

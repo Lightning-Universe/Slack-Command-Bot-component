@@ -83,9 +83,7 @@ class SlackCommandBot(L.LightningWork):
             app = Flask(__name__)
 
         client = slack.WebClient(token=self._bot_token)
-        slack_events_adapter = SlackEventAdapter(
-            self._signing_secret, "/slack/events", app
-        )
+        SlackEventAdapter(self._signing_secret, "/slack/events", app)
         BOT_ID = client.api_call("auth.test")["user_id"]
         print(f"Bot initialized with id: {BOT_ID}")
 
@@ -223,7 +221,7 @@ class SlackCommandBot(L.LightningWork):
                     # Store the installation
                     installation_store.save(installation)
 
-                    return "Thanks for installing this app!"
+                    return f"<h1>Thanks for installing this app! Add the bot user to a channel and try the command `/{self.command}`</h1>"
                 else:
                     return make_response(
                         f"Try the installation again (the state value is already expired)",
