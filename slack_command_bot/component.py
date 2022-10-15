@@ -221,7 +221,13 @@ class SlackCommandBot(L.LightningWork):
                     # Store the installation
                     installation_store.save(installation)
 
-                    return f"<h1>Thanks for installing this app! Add the bot user to a channel and try the command `/{self.command}`</h1>"
+                    return f"""<h1>
+                            Thanks for installing this app!</h1>
+                            <p>
+                            In your workspace, invite the slack bot to a channel by tagging it.
+                            Use the command `/{self.command}` to get started.
+                            </p>
+                            """
                 else:
                     return make_response(
                         f"Try the installation again (the state value is already expired)",
