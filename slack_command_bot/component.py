@@ -1,14 +1,20 @@
 import abc
+import logging
 import os
+from functools import lru_cache
+from typing import Optional
 
 import lightning as L
 import slack
+from db import Workspace, engine, sqlite_file_name
 from dotenv import load_dotenv
 from flask import Flask, make_response, redirect, request
+from lightning.app.storage import Drive
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from slack_sdk.oauth.installation_store import FileInstallationStore, Installation
 from slack_sdk.oauth.state_store import FileOAuthStateStore
 from slackeventsapi import SlackEventAdapter
+from sqlmodel import Session, select
 
 load_dotenv(".env")
 
@@ -63,6 +69,8 @@ class SlackCommandBot(L.LightningWork):
         self._client_secret = client_secret or os.environ.get("CLIENT_SECRET")
         self._signing_secret = signing_secret or os.environ.get("SIGNING_SECRET")
         self._bot_token = bot_token or os.environ.get("BOT_TOKEN")
+        self._engine = None
+        self.db_drive = Drive("lit://command_bot.db")
 
     @abc.abstractmethod
     def handle_command(self):
@@ -71,8 +79,25 @@ class SlackCommandBot(L.LightningWork):
         See the example in app.py
         """
 
+    @lru_cache(maxsize=128)
+    def get_bot_token_by_team_id(self, team_id: str) -> Optional[str]:
+        with Session(engine) as session:
+            statement = select(Workspace).where(Workspace.team_id == team_id)
+            result = session.exec(statement).first()
+            return result.bot_token if result else None
+
     def save_new_workspace(self, team_id, bot_token):
         """Implement this method to save the team id and bot token for distributing slack workspace."""
+        if self.get_bot_token_by_teamid(team_id):
+            logging.info(f"Bot already installed for {team_id}")
+            return
+
+        with Session(engine) as session:
+            workspace = Workspace(team_id=team_id, bot_token=bot_token)
+            session.add(workspace)
+            session.commit()
+            self.db_drive.put(sqlite_file_name)
+            logging.info(f"team id={team_id} added to db")
 
     @property
     def bot_token(self):
@@ -121,6 +146,11 @@ class SlackCommandBot(L.LightningWork):
         app.route(self.command, methods=["POST", "GET"])(self.handle_command)
 
     def run(self, *args, **kwargs) -> None:
+        import db
+
+        self._engine = db.engine
+
+        db.create_db_and_tables()
         app = Flask(__name__)
         self.init_flask_app(app=app)
         print("starting Slack Command Bot")

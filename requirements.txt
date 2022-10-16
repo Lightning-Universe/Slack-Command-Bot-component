@@ -1,4 +1,5 @@
 slack_bolt==1.14.3
 slack-sdk==3.18.1
 slackeventsapi==3.0.1
+sqlmodel==0.0.8
 lightning
