@@ -32,7 +32,7 @@ def _load_requirements(path_dir: str, file_name: str = "requirements.txt") -> li
 
 setup(
     name="slack_command_bot",
-    version="0.0.1",
+    version="0.1.0",
     description="⚡ With this app you can create a Slack bot and enable interactivity with the Slash Commands.",
     author="Aniket Maurya",
     author_email="aniket@lightning.ai",
