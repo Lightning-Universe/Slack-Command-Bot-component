@@ -17,6 +17,7 @@ from sqlmodel import Session, select
 
 from slack_command_bot.db import Workspace, engine, sqlite_file_name
 
+logger = logging.getLogger(__name__)
 load_dotenv(".env")
 
 
@@ -87,10 +88,10 @@ class SlackCommandBot(L.LightningWork):
             result = session.exec(statement).first()
             return result.bot_token if result else None
 
-    def save_new_workspace(self, team_id, bot_token):
+    def save_new_workspace(self, team_id, bot_token) -> Optional[bool]:
         """Implement this method to save the team id and bot token for distributing slack workspace."""
         if self.get_bot_token_by_team_id(team_id):
-            logging.info(f"Bot already installed for {team_id}")
+            logger.info(f"Bot already installed for {team_id}")
             return
 
         with Session(engine) as session:
@@ -99,7 +100,7 @@ class SlackCommandBot(L.LightningWork):
             session.commit()
             self.db_drive.put(sqlite_file_name)
             self.db_drive.put("./data")
-            logging.info(f"team id={team_id} added to db")
+            logger.info(f"team id={team_id} added to db")
 
     @property
     def bot_token(self):
@@ -153,7 +154,7 @@ class SlackCommandBot(L.LightningWork):
         self._engine = db.engine
 
         if sqlite_file_name in self.db_drive.list():
-            logging.info("retrieving DB from Drive")
+            logger.info("retrieving DB from Drive")
             self.db_drive.get(sqlite_file_name, overwrite=True)
             self.db_drive.get("./data", overwrite=True)
         db.create_db_and_tables()
@@ -251,18 +252,18 @@ class SlackCommandBot(L.LightningWork):
                         token_type=oauth_response.get("token_type"),
                     )
 
+                    # Store the installation
+                    installation_store.save(installation)
+
                     self.save_new_workspace(
                         team_id=installed_team.get("id"), bot_token=bot_token
                     )
-
-                    # Store the installation
-                    installation_store.save(installation)
 
                     return f"""<h1>
                             Thanks for installing this app!</h1>
                             <p>
                             This app’s bot user needs to be in the channel to
-                            use the command `/{self.command}`.
+                            use the command <b>{self.command}</b>.
                             </p>
                             """
                 else:
