@@ -6,7 +6,7 @@ from typing import Optional
 
 import lightning as L
 import slack
-from db import Workspace, engine, sqlite_file_name
+from slack_command_bot.db import Workspace, engine, sqlite_file_name
 from dotenv import load_dotenv
 from flask import Flask, make_response, redirect, request
 from lightning.app.storage import Drive
@@ -70,7 +70,7 @@ class SlackCommandBot(L.LightningWork):
         self._signing_secret = signing_secret or os.environ.get("SIGNING_SECRET")
         self._bot_token = bot_token or os.environ.get("BOT_TOKEN")
         self._engine = None
-        self.db_drive = Drive("lit://command_bot.db")
+        self.db_drive = Drive("lit://command_bot")
 
     @abc.abstractmethod
     def handle_command(self):
@@ -97,6 +97,7 @@ class SlackCommandBot(L.LightningWork):
             session.add(workspace)
             session.commit()
             self.db_drive.put(sqlite_file_name)
+            self.db_drive.put("./data")
             logging.info(f"team id={team_id} added to db")
 
     @property
@@ -146,11 +147,16 @@ class SlackCommandBot(L.LightningWork):
         app.route(self.command, methods=["POST", "GET"])(self.handle_command)
 
     def run(self, *args, **kwargs) -> None:
-        import db
+        from slack_command_bot import db
 
         self._engine = db.engine
 
+        if sqlite_file_name in self.db_drive.list():
+            logging.info("retrieving DB from Drive")
+            self.db_drive.get(sqlite_file_name, overwrite=True)
+            self.db_drive.get("./data", overwrite=True)
         db.create_db_and_tables()
+
         app = Flask(__name__)
         self.init_flask_app(app=app)
         print("starting Slack Command Bot")
