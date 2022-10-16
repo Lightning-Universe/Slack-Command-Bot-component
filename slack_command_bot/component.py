@@ -17,7 +17,6 @@ from sqlmodel import Session, select
 
 from slack_command_bot.db import Workspace, engine, sqlite_file_name
 
-logger = logging.getLogger(__name__)
 load_dotenv(".env")
 
 
@@ -73,6 +72,7 @@ class SlackCommandBot(L.LightningWork):
         self._bot_token = bot_token or os.environ.get("BOT_TOKEN")
         self._engine = None
         self.db_drive = Drive("lit://command_bot")
+        self._cache_workspace = {}
 
     @abc.abstractmethod
     def handle_command(self):
@@ -81,17 +81,23 @@ class SlackCommandBot(L.LightningWork):
         See the example in app.py
         """
 
-    @lru_cache(maxsize=128)
     def get_bot_token_by_team_id(self, team_id: str) -> Optional[str]:
+        if team_id in self._cache_workspace:
+            return self._cache_workspace[team_id]
+
         with Session(engine) as session:
             statement = select(Workspace).where(Workspace.team_id == team_id)
             result = session.exec(statement).first()
-            return result.bot_token if result else None
+            bot_token = result.bot_token if result else None
+
+        if bot_token:
+            self._cache_workspace[team_id] = bot_token
+        return bot_token
 
     def save_new_workspace(self, team_id, bot_token) -> Optional[bool]:
         """Implement this method to save the team id and bot token for distributing slack workspace."""
         if self.get_bot_token_by_team_id(team_id):
-            logger.info(f"Bot already installed for {team_id}")
+            print(f"Bot already installed for {team_id}")
             return
 
         with Session(engine) as session:
@@ -100,7 +106,7 @@ class SlackCommandBot(L.LightningWork):
             session.commit()
             self.db_drive.put(sqlite_file_name)
             self.db_drive.put("./data")
-            logger.info(f"team id={team_id} added to db")
+            print(f"team id={team_id} added to db")
 
     @property
     def bot_token(self):
@@ -154,7 +160,7 @@ class SlackCommandBot(L.LightningWork):
         self._engine = db.engine
 
         if sqlite_file_name in self.db_drive.list():
-            logger.info("retrieving DB from Drive")
+            print("retrieving DB from Drive")
             self.db_drive.get(sqlite_file_name, overwrite=True)
             self.db_drive.get("./data", overwrite=True)
         db.create_db_and_tables()

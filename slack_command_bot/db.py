@@ -6,8 +6,8 @@ from sqlmodel import Field, SQLModel, create_engine
 
 class Workspace(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    team_id: str
-    bot_token: str
+    team_id: str = Field(unique=True, nullable=False)
+    bot_token: str = Field(unique=True, nullable=False)
     created_at: datetime = datetime.now()
 
 
