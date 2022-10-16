@@ -224,8 +224,8 @@ class SlackCommandBot(L.LightningWork):
                     return f"""<h1>
                             Thanks for installing this app!</h1>
                             <p>
-                            In your workspace, invite the slack bot to a channel by tagging it.
-                            Use the command `/{self.command}` to get started.
+                            This app’s bot user needs to be in the channel to
+                            use the command `/{self.command}`.
                             </p>
                             """
                 else:
