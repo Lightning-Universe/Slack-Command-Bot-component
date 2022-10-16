@@ -6,7 +6,6 @@ from typing import Optional
 
 import lightning as L
 import slack
-from slack_command_bot.db import Workspace, engine, sqlite_file_name
 from dotenv import load_dotenv
 from flask import Flask, make_response, redirect, request
 from lightning.app.storage import Drive
@@ -15,6 +14,8 @@ from slack_sdk.oauth.installation_store import FileInstallationStore, Installati
 from slack_sdk.oauth.state_store import FileOAuthStateStore
 from slackeventsapi import SlackEventAdapter
 from sqlmodel import Session, select
+
+from slack_command_bot.db import Workspace, engine, sqlite_file_name
 
 load_dotenv(".env")
 
