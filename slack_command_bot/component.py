@@ -30,7 +30,7 @@ DEFAULT_SCOPES = [
     "incoming-webhook",
     "channels:read",
     "groups:read",
-    "mpim: read",
+    "mpim:read",
     "im:read",
 ]
 
