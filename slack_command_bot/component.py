@@ -22,6 +22,18 @@ load_dotenv(".env")
 
 # TODO: @aniketmaurya cleanup the oauth code
 
+DEFAULT_SCOPES = [
+    "chat:write",
+    "chat:write.public",
+    "commands",
+    "files:write",
+    "incoming-webhook",
+    "channels:read",
+    "groups:read",
+    "mpim: read",
+    "im:read",
+]
+
 
 class SlackCommandBot(L.LightningWork):
     """With this app you can create a Slack bot and enable interactivity with the Slash Commands. It can recieve slash
@@ -60,11 +72,13 @@ class SlackCommandBot(L.LightningWork):
         bot_token=None,
         slack_client_id=None,
         client_secret=None,
+        scopes=None,
         *args,
         **kwargs,
     ):
         super().__init__(parallel=True, *args, **kwargs)
         self.command = command
+        self._scopes = scopes or DEFAULT_SCOPES
 
         self._slack_client_id = slack_client_id or os.environ.get("SLACK_CLIENT_ID")
         self._client_secret = client_secret or os.environ.get("CLIENT_SECRET")
@@ -128,14 +142,7 @@ class SlackCommandBot(L.LightningWork):
 
         # Build https://slack.com/oauth/v2/authorize with sufficient query parameters
         authorize_url_generator = AuthorizeUrlGenerator(
-            client_id=self._slack_client_id,
-            scopes=[
-                "chat:write",
-                "chat:write.public",
-                "commands",
-                "files:write",
-                "incoming-webhook",
-            ],
+            client_id=self._slack_client_id, scopes=self._scopes
         )
 
         self._create_oauth_url(
