@@ -65,7 +65,7 @@ jobs:
           SLACK_CLIENT_ID: ${{secrets.SLACK_CLIENT_ID}}
           CLIENT_SECRET: ${{secrets.CLIENT_SECRET}}
         run: |
-          coverage run --source slack_command_bot -m py.test slack_command_bot tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
+          coverage run --source slack_command_bot -m pytest slack_command_bot tests -v --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}.xml
 
       - name: Statistics
         if: success()
